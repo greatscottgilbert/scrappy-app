@@ -40,15 +40,15 @@ const originalSearch=runSearch;
 runSearch=async function(){
  if(!$('cityChoice').value)return originalSearch();
  if($('cityChoice').value!=='Vancouver')return originalSearch();
- $('siteResults').classList.remove('hide');$('count').textContent='Loading real Vancouver demolition permits…';$('results').innerHTML='';
+ $('siteResults').classList.remove('hide');$('count').textContent='Loading Vancouver demo sites…';$('results').innerHTML='';
  try{
   const info=await loadVancouverLive();
   originalSearch();
   const note=document.createElement('p');
-  note.style.fontSize='12px';note.textContent='Live City of Vancouver issued permits · '+info.eligible+' conservatively matched whole-building demolitions out of '+info.total+' demolition permits. Physical demolition status is not confirmed. Ambiguous records excluded.';
+  note.style.fontSize='12px';note.textContent='Vancouver demo sites · '+info.eligible+' conservatively matched whole-building demolitions out of '+info.total+' city records reviewed. Physical demolition status is not confirmed. Ambiguous records excluded.';
   $('results').prepend(note);
  }catch(err){
   $('count').textContent='Live feed unavailable';
-  $('results').textContent='Could not load Vancouver permits: '+err.message+'. Check your connection and retry.';
+  $('results').textContent='Could not load Vancouver demo sites: '+err.message+'. Check your connection and retry.';
  }
 };
