@@ -19,7 +19,14 @@ function addressGrid(p){
  }
  const streets={MAIN:-123.101,FRASER:-123.09,KNIGHT:-123.077,VICTORIA:-123.065,NANAIMO:-123.056,COMMERCIAL:-123.069,GRANVILLE:-123.139,CAMBIE:-123.115,OAK:-123.128,ARBUTUS:-123.153,BURRARD:-123.146,HEATHER:-123.121,ONTARIO:-123.106,QUEBEC:-123.103,CLARK:-123.077,GLEN:-123.083};
  for(const [name,lon] of Object.entries(streets))if(road.startsWith(name+' ')||road===name){x=lon;y=49.283-n/100*0.00142;break}
- if(x===null||y===null)return null;
+ if(x===null||y===null){
+  // Use postal-code FSA as a coarse fallback so an unrecognized street
+  // does not force the entire route back to alphabetical order.
+  const postal=a.match(/\\b(V[0-9][A-Z])\\s*[0-9][A-Z][0-9]\\b/);
+  const centroids={V5K:[49.28,-123.04],V5L:[49.275,-123.065],V5M:[49.26,-123.065],V5N:[49.255,-123.07],V5P:[49.235,-123.07],V5R:[49.24,-123.04],V5S:[49.22,-123.04],V5T:[49.265,-123.10],V5V:[49.25,-123.10],V5W:[49.235,-123.10],V5X:[49.215,-123.10],V5Y:[49.255,-123.115],V5Z:[49.255,-123.125],V6A:[49.275,-123.095],V6B:[49.28,-123.115],V6C:[49.285,-123.115],V6E:[49.285,-123.135],V6G:[49.29,-123.14],V6H:[49.265,-123.135],V6J:[49.26,-123.15],V6K:[49.265,-123.17],V6L:[49.235,-123.16],V6M:[49.225,-123.145],V6N:[49.23,-123.19],V6P:[49.215,-123.17],V6R:[49.265,-123.20],V6S:[49.25,-123.20],V6T:[49.26,-123.245],V6Z:[49.275,-123.125]};
+  if(postal&&centroids[postal[1]])return {lat:centroids[postal[1]][0],lon:centroids[postal[1]][1]};
+  return null;
+ }
  return {lat:y,lon:x};
 }
 function geographicSweep(items){
