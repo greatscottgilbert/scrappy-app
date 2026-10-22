@@ -1,0 +1,8 @@
+{
+  "name": "Scrappy Vancouver Scrap Prices",
+  "short_name": "Scrappy",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#183e34"
+}
