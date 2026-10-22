@@ -22,7 +22,7 @@ async function loadVancouverLive(){
  const existing=new Map(permits.map(p=>[p.permit||p.id,p]));
  const live=snapshot.sites.map(r=>{
   const old=existing.get(r.permit||r.id)||{};
-  return {...r,selected:!!old.selected,stage:Number.isInteger(old.stage)?old.stage:0};
+  return {...r,selected:!!old.selected,stage:Number.isInteger(old.stage)?old.stage:0,opportunity:old.opportunity||'Not visited'};
  });
  permits=[...permits.filter(p=>p.city!=='Vancouver'),...live];
  save('scrappy-permits',permits);
