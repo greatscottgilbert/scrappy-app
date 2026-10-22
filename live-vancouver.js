@@ -15,27 +15,20 @@ function classifyBuilding(r){
  return 'Other';
 }
 async function loadVancouverLive(){
- const rows=[];let offset=0;
- while(true){
-  const u=new URL(SCRAPPY_API);
-  u.searchParams.set('where', "typeofwork = 'Demolition / Deconstruction'");
-  u.searchParams.set('select','permitnumber,issuedate,address,projectdescription,specificusecategory,propertyuse,typeofwork');
-  u.searchParams.set('limit','100');u.searchParams.set('offset',String(offset));
-  const response=await fetch(u.toString());
-  if(!response.ok)throw new Error('City API returned '+response.status);
-  const json=await response.json(),batch=json.results||[];
-  rows.push(...batch);offset+=batch.length;
-  if(batch.length<100||offset>=10000)break;
- }
- const existing=new Map(permits.map(p=>[p.permit,p]));
- const live=rows.filter(wholeBuilding).map(r=>{
-  const old=existing.get(r.permitnumber)||{};
-  return {id:old.id||r.permitnumber,permit:r.permitnumber,address:r.address||'',city:'Vancouver',date:r.issuedate||'',status:'Permit issued (physical progress unverified)',buildingType:classifyBuilding(r),selected:!!old.selected,stage:Number.isInteger(old.stage)?old.stage:0,description:r.projectdescription||''};
- }).filter(r=>r.address);
- permits=[...permits.filter(p=>p.city!=='Vancouver'||(!p.permit&&!p.id?.startsWith('BP-'))),...live];
+ const response=await fetch('./data/vancouver-sites.json',{cache:'no-cache'});
+ if(!response.ok)throw new Error('Saved Vancouver site list not published yet ('+response.status+')');
+ const snapshot=await response.json();
+ if(!Array.isArray(snapshot.sites)||!snapshot.sites.length)throw new Error('Saved site list is empty');
+ const existing=new Map(permits.map(p=>[p.permit||p.id,p]));
+ const live=snapshot.sites.map(r=>{
+  const old=existing.get(r.permit||r.id)||{};
+  return {...r,selected:!!old.selected,stage:Number.isInteger(old.stage)?old.stage:0};
+ });
+ permits=[...permits.filter(p=>p.city!=='Vancouver'),...live];
  save('scrappy-permits',permits);
- return {total:rows.length,eligible:live.length};
+ return {total:snapshot.sourceRecordCount,eligible:live.length};
 }
+
 const originalSearch=runSearch;
 runSearch=async function(){
  if(!$('cityChoice').value)return originalSearch();
@@ -48,7 +41,7 @@ runSearch=async function(){
   note.style.fontSize='12px';note.textContent='Vancouver demo sites · '+info.eligible+' conservatively matched whole-building demolitions out of '+info.total+' city records reviewed. Physical demolition status is not confirmed. Ambiguous records excluded.';
   $('results').prepend(note);
  }catch(err){
-  $('count').textContent='Live feed unavailable';
+  $('count').textContent='Saved site list unavailable';
   $('results').textContent='Could not load Vancouver demo sites: '+err.message+'. Check your connection and retry.';
  }
 };
