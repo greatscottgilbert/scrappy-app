@@ -1,0 +1,16 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const m=require('../field-observations.js');
+const row={city:'Vancouver',permit:'ABC-123',id:'old-id'};
+const storage=()=>{let map=new Map();return{getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v)}};
+test('missing reports are unknown, never verified',()=>{assert.equal(m.get(storage(),row),null);assert.equal(m.showableStage(null),null)});
+test('manual status has an explicit time and cannot be verified',()=>{let s=storage(),v=m.record(s,row,3,'2026-11-01');assert.equal(v.stage,3);assert.equal(v.source,'manual-local');assert.equal(v.verified,false);assert.ok(v.observedAt)});
+test('survives changed transient feed ID when permit is stable',()=>{let s=storage();m.record(s,row,2,'2026-11-01');assert.equal(m.get(s,{...row,id:'new-id'}).stage,2)});
+test('same permit number in a different city remains separate',()=>{let s=storage();m.record(s,row,2);assert.equal(m.get(s,{...row,city:'New Westminster'}),null)});
+test('municipality and permit normalization removes case/whitespace differences',()=>{let s=storage();m.record(s,row,4);assert.equal(m.get(s,{...row,city:' vancouver ',permit:' abc-123 '}).stage,4)});
+test('site ID works if municipal permit number missing',()=>{let s=storage();m.record(s,{city:'New Westminster',id:'local-1'},1);assert.equal(m.get(s,{city:'New Westminster',id:'local-1'}).stage,1)});
+test('invalid values are rejected, never silently clamped',()=>{for(const value of [-1,7,'2',2.5])assert.throws(()=>m.record(storage(),row,value),/Invalid/);assert.throws(()=>m.record(storage(),{id:'x'},2),/city/)});
+test('malformed local storage does not generate false status',()=>{let s=storage();s.setItem(m.STORAGE_KEY,'{invalid');assert.equal(m.get(s,row),null);m.record(s,row,0);assert.equal(m.get(s,row).stage,0)});
+test('forged verified field cannot confer verification',()=>{let s=storage();s.setItem(m.STORAGE_KEY,JSON.stringify({[m.keyFor(row)]:{stage:6,source:'manual-local',observedAt:'2026-11-01',verified:true}}));assert.equal(m.get(s,row).verified,false)});
+test('legacy progress remains visible as unknown-date and unverified',()=>{let v=m.get(storage(),{...row,stage:5});assert.equal(v.source,'legacy-unverified');assert.equal(v.observedAt,null);assert.equal(v.verified,false)});
+test('clear removes manual report',()=>{let s=storage();m.record(s,row,2);m.clear(s,row);assert.equal(m.get(s,row),null)});
+test('blocked storage save surfaces an error',()=>{assert.throws(()=>m.record({getItem:()=>null,setItem:()=>{throw Error('QuotaExceeded')}},row,2),/QuotaExceeded/)});

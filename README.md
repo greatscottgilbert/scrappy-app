@@ -14,3 +14,8 @@ The city selector lists **Vancouver** because a snapshot is bundled, plus any ci
 Suggestions and saved shortlists remain in this browser. Permit issuance does **not** prove that demolition has occurred, scrap is accessible, or the public may enter a site. The route order is approximate, and public Google Maps may impose waypoint limits. No subscriptions are charged; Android/Play and shared authenticated persistence are not complete.
 
 Run UI/regression tests with `node --test scripts/*.test.cjs` (Node 22 or later).
+
+## Private field status (beta)
+Choose one of seven field stages for a demolition site, or `Not observed`. This is **your unverified observation**, not a municipal inspection or a verified public report. Entries live in this browser only, under `scrappy-field-observations-v1`, keyed by municipality plus permit number (or site ID). A timestamp and private/manual source are saved locally and survive Vancouver source refresh. Older untimestamped statuses remain labelled unverified.
+
+**Scope:** no account sync, photo upload, shared status moderation, independent confirmation or public publishing. Site discovery never establishes legal entry or scrap-removal rights. Clearing this browser's site data erases local records; exporting a CSV does not export these observations. Test: `node --test scripts/*.test.cjs`.

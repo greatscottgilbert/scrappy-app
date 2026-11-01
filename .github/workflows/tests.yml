@@ -18,6 +18,7 @@ jobs:
           node --check app.js
           node --check city-types.js
           node --check city-facets.js
+          node --check field-observations.js
           node --check live-vancouver.js
           node --check route-planner.js
       - name: Unit and regression tests
