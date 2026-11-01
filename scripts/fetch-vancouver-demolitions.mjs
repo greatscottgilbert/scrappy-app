@@ -25,7 +25,7 @@ async function main() {
   const permits = records.map((r,i) => {
     const id = String(r.permitnumber||'').trim();
     const date = String(r.issuedate||'').slice(0,10);
-    if (!id || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || r.typeofwork !== 'Demolition / Deconstruction')
+    if (!id || !/^\d{4}-\d{2}-\d{2}$/.test(date) || r.typeofwork !== 'Demolition / Deconstruction')
       throw new Error('Invalid permit ID/date/work type in row '+i);
     return r;
   });
@@ -43,7 +43,7 @@ async function main() {
     newComparedWithPreviousVerifiedSnapshot:previous ? newlyObserved.length : null,
     newestFive:permits.slice(0,5),newlyObserved,results:permits};
   await mkdir('data',{recursive:true});
-  await writeFile(snapshotPath, JSON.stringify(out,null,2)+'\\n');
+  await writeFile(snapshotPath, JSON.stringify(out,null,2)+'\n');
   console.log(JSON.stringify({status:'VERIFIED',checkedAt,source:url,totalCount:out.totalCount,
     maxIssueDate:out.maxIssueDate,newComparedWithPreviousVerifiedSnapshot:out.newComparedWithPreviousVerifiedSnapshot,
     newestFive:out.newestFive},null,2));
