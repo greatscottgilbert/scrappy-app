@@ -45,3 +45,19 @@ runSearch=async function(){
   $('results').textContent='Could not load Vancouver demo sites: '+err.message+'. Check your connection and retry.';
  }
 };
+
+/* Load bundled city addresses on selection so suggestions work before Search.
+   Share one in-flight request with Search; retry on failure. */
+let vancouverSnapshotTask=null;
+const loadVancouverUncached=loadVancouverLive;
+loadVancouverLive=function(){
+ if(!vancouverSnapshotTask){
+  vancouverSnapshotTask=loadVancouverUncached()
+    .then(info=>{document.dispatchEvent(new Event('scrappy:permits-updated'));return info;})
+    .catch(error=>{vancouverSnapshotTask=null;throw error;});
+ }
+ return vancouverSnapshotTask;
+};
+$('cityChoice').addEventListener('change',()=>{
+ if($('cityChoice').value==='Vancouver')loadVancouverLive().catch(()=>{/* Search provides the visible error state. */});
+});
