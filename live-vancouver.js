@@ -61,3 +61,41 @@ loadVancouverLive=function(){
 $('cityChoice').addEventListener('change',()=>{
  if($('cityChoice').value==='Vancouver')loadVancouverLive().catch(()=>{/* Search provides the visible error state. */});
 });
+
+/* Separate Vancouver salvage and abatement search. Fetch only selected years from the City's issued-permits API. */
+const VANCOUVER_ABATEMENT_API='https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/issued-building-permits/records';
+let abatementCache=new Map();
+async function fetchVancouverAbatement(years){
+ const key=years.slice().sort().join(','); if(abatementCache.has(key))return abatementCache.get(key);
+ const task=(async()=>{
+  const clauses=years.map(y=>"issueyear = '"+y+"'").join(' OR ');
+  const where="typeofwork = 'Salvage and Abatement' AND ("+clauses+")";
+  let offset=0,all=[];
+  while(true){
+   const params=new URLSearchParams({where,order_by:'issuedate DESC, permitnumber ASC',limit:'100',offset:String(offset)});
+   const response=await fetch(VANCOUVER_ABATEMENT_API+'?'+params.toString(),{headers:{Accept:'application/json'}});
+   if(!response.ok)throw new Error('Vancouver permit API returned HTTP '+response.status);
+   const data=await response.json(); if(!Array.isArray(data.results))throw new Error('Vancouver API response did not contain permit records');
+   all.push(...data.results); offset+=data.results.length;
+   if(data.results.length<100||offset>=10000)break;
+  }
+  return all.map(r=>({id:String(r.permitnumber||r.address),permit:String(r.permitnumber||''),address:String(r.address||''),city:'Vancouver',date:String(r.issuedate||'').slice(0,10),status:'City issued permit (site progress unverified)',buildingType:classifyBuilding(r),description:String(r.projectdescription||''),typeOfWork:String(r.typeofwork||''),permitCategory:String(r.permitcategory||''),selected:false,opportunity:'Not visited'}));
+ })(); abatementCache.set(key,task); try{return await task}catch(e){abatementCache.delete(key);throw e}
+}
+const previousRunSearch=runSearch;
+runSearch=async function(){
+ if($('permitMode')?.value!=='abatement')return previousRunSearch();
+ if(!$('cityChoice').value){alert('Please select a city first.');$('cityChoice').focus();return}
+ if($('cityChoice').value!=='Vancouver'){alert('Salvage and abatement search is currently available for Vancouver only.');return}
+ const years=[...document.querySelectorAll('#permitYears input:checked')].map(x=>x.value);
+ if(!years.length){alert('Select at least one permit year.');return}
+ $('siteResults').classList.remove('hide');$('routeBar').classList.add('hide');$('routeBar').style.display='none';document.body.classList.remove('has-route');$('count').textContent='Loading Vancouver salvage and abatement permits…';$('results').textContent='';
+ try{
+  const incoming=await fetchVancouverAbatement(years),others=permits.filter(p=>!(p.city==='Vancouver'&&p.typeOfWork==='Salvage and Abatement'));
+  permits=[...others,...incoming]; save('scrappy-permits',permits);
+  const q=$('search').value.trim().toLowerCase();
+  searchResults=incoming.filter(p=>!q||[p.address,p.city,p.permit,p.description,p.permitCategory].join(' ').toLowerCase().includes(q));
+  if(searchResults.length){$('routeBar').classList.remove('hide');$('routeBar').style.display='flex';document.body.classList.add('has-route')}
+  showPermits(); const note=document.createElement('p');note.style.fontSize='12px';note.textContent='Salvage and Abatement permits · '+incoming.length+' records returned for '+years.join(', ')+'. These are issued permit records, not confirmation that work is underway or that material is available.';$('results').prepend(note);
+ }catch(error){$('count').textContent='Permit search unavailable';$('results').textContent='Could not load salvage and abatement permits: '+error.message+'. Check your connection and try again.'}
+};
