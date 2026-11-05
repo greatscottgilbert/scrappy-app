@@ -1,0 +1,1 @@
+const C=JobCore; const state=C.restore(localStorage.getItem('autojobhunter-v1')); document.getElementById('jobList').textContent='Ready to review opportunities'; document.getElementById('status').textContent='Offline demo. No applications are sent.';
