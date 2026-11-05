@@ -1,0 +1,14 @@
+{
+  "name": "autojobhunter-recovered-beta",
+  "version": "0.2.0-baseline",
+  "private": true,
+  "description": "Recovered Cloudflare reviewer beta source: not a compiled Android application",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "preview": "python3 -m http.server 8000 --directory web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
