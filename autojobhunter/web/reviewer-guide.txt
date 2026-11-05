@@ -1,0 +1,7 @@
+AutoJobHunter reviewer beta 0.2 — 3 November 2026
+
+Use fictional details. Load demo, inspect Jobs, prepare and review a letter, download text, practise an interview and update Tracker. Entries are local to this browser; stages are self-reported. Nothing is sent automatically. No live AI, scraping, unattended applications, research enrolment or government endorsement.
+
+Android: open in Chrome and check Install app / Add to Home screen. This is a web beta, NOT an APK. Physical-device installation, offline, accessibility and security acceptance tests remain outstanding. Hosting may process ordinary request metadata; form contents are not uploaded by this application. Do not enter IDs, banking, medical or sensitive third-party records. Local storage is not encrypted by this app. Erase clears local records, not downloaded exports.
+
+Independent pre-application demonstration; not a funding application or claim for historical development reimbursement. No paid APIs or Replit.
