@@ -12,14 +12,24 @@ def typ(r):
  for pattern,value in [(r"industrial|manufactur|warehouse","Industrial"),(r"retail|office|commercial|restaurant|service uses","Commercial"),(r"apartment|multiple dwelling|condo|multi.family","Apartment / condo"),(r"duplex|townhouse|rowhouse|two.family","Duplex / townhouse"),(r"single|one.family|detached house|dwelling","Single-family")]:
   if re.search(pattern,s):return value
  return "Other"
-records=[];offset=0
+records=[];offset=0;expected_count=None;seen=set()
 while True:
  params=urllib.parse.urlencode({"where":"typeofwork = 'Demolition / Deconstruction'","limit":100,"offset":offset})
  with urllib.request.urlopen(API+"?"+params,timeout=45) as resp: obj=json.load(resp)
- batch=obj.get("results",[])
+ count=obj.get("total_count")
+ if not isinstance(count,int) or isinstance(count,bool) or count<0:raise RuntimeError("Invalid source total count; retaining previous snapshot")
+ if expected_count is None:expected_count=count
+ elif count!=expected_count:raise RuntimeError("Source count changed during pagination; retaining previous snapshot")
+ batch=obj.get("results")
+ if not isinstance(batch,list):raise RuntimeError("Invalid source results; retaining previous snapshot")
+ for row in batch:
+  number=str(row.get("permitnumber") or "").strip()
+  if not number or number in seen:raise RuntimeError("Missing or duplicate permit ID; retaining previous snapshot")
+  seen.add(number)
  records.extend(batch);offset+=len(batch)
  if len(batch)<100:break
  if offset>=10000:raise RuntimeError("Safety limit reached; refusing truncated snapshot")
+if len(records)!=expected_count:raise RuntimeError("Incomplete source snapshot; retaining previous snapshot")
 sites=[]
 for r in records:
  if not eligible(r):continue
